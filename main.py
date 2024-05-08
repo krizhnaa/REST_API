@@ -35,12 +35,21 @@ with app.app_context():
     db.create_all()
 
 
+def to_dict(self):
+    return { column.name : getattr(self, column.name)  for column in self.__table__.columns }
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
 # HTTP GET - Read Record
+@app.route("/random", methods=["GET"])
+def random_cafe():
+    result = db.session.execute(db.select(Cafe))
+    all_cafes = result.scalars().all()
+    random_cafe = random.choice(all_cafes)
+    return jsonify(cafe=to_dict(random_cafe))
 
 # HTTP POST - Create Record
 
