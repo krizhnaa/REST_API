@@ -7,9 +7,12 @@ from sqlalchemy import Integer, String, Boolean
 
 app = Flask(__name__)
 
+
 # CREATE DB
 class Base(DeclarativeBase):
     pass
+
+
 # Connect to Database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cafes.db'
 db = SQLAlchemy(model_class=Base)
@@ -38,6 +41,7 @@ with app.app_context():
 def to_dict(self):
     return { column.name : getattr(self, column.name)  for column in self.__table__.columns }
 
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -54,7 +58,7 @@ def random_cafe():
 
 @app.route("/all", methods=["GET"])
 def all_cafes():
-    result = db.session.execute(db.select(Cafe).order_by(Cafe.name))
+    result = db.session.execute(db.select(Cafe))
     all_cafes = result.scalars().all()
     return jsonify(cafe= [ to_dict(cafe) for cafe in all_cafes])
 
@@ -73,6 +77,28 @@ def search():
 
 
 # HTTP POST - Create Record
+
+@app.route("/add", methods=["POST"])
+def add_cafe():
+    new_cafe = Cafe(
+        name=request.form.get("name"),
+        map_url=request.form.get("map_url"),
+        img_url=request.form.get("img_url"),
+        location=request.form.get("location"),
+        has_sockets=bool(request.form.get("has_sockets")),
+        has_toilet=bool(request.form.get("has_toilet")),
+        has_wifi=bool(request.form.get("has_wifi")),
+        can_take_calls=bool(request.form.get("can_take_calls")),
+        seats=request.form.get("seats"),
+        coffee_price=request.form.get("coffee_price"),
+    )
+    db.session.add(new_cafe)
+    db.session.commit()
+    return jsonify(response={
+        "success" : "Cafe added successfully."
+    })
+
+
 
 # HTTP PUT/PATCH - Update Record
 
